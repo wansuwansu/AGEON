@@ -3,9 +3,7 @@ import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
 
-// =========================================================================
-// 🔥 완수님의 AGEON 데이터베이스 설정값 적용 완료!
-// =========================================================================
+// 완수님의 파이어베이스 설정값
 const firebaseConfig = {
   apiKey: "AIzaSyBiKcMgEhRCYE4NpunNS3NaDF8XR67b5CY",
   authDomain: "ageon-db.firebaseapp.com",
@@ -16,7 +14,6 @@ const firebaseConfig = {
   measurementId: "G-DXR7Y6FYET"
 };
 
-// 파이어베이스 실행!
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -44,16 +41,18 @@ export default function Dashboard() {
   const [filterStatus, setFilterStatus] = useState("All");
   const [expandedId, setExpandedId] = useState(null);
 
-  // 💥 실시간 DB 불러오기
+  // 💥 제가 빼먹었던 바로 그 부품입니다! (입력창 작동 함수)
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   useEffect(() => {
     setIsClient(true);
-    // 플랫폼 데이터 실시간 구독
     const unsubscribePlatforms = onSnapshot(collection(db, "platforms"), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPlatforms(data.sort((a, b) => b.createdAt - a.createdAt));
     });
 
-    // 공용 자료실 실시간 구독
     const unsubscribeResources = onSnapshot(collection(db, "resources"), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setResources(data.sort((a, b) => b.createdAt - a.createdAt));
@@ -65,7 +64,6 @@ export default function Dashboard() {
     };
   }, []);
 
-  // DB 데이터 추가
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!formData.name) return alert("플랫폼 이름은 필수입니다!");
@@ -73,19 +71,16 @@ export default function Dashboard() {
       await addDoc(collection(db, "platforms"), { ...formData, createdAt: Date.now() });
       setFormData({ name: "", link: "", docLink: "", status: "검토 중", email: "", accountId: "", accountPw: "", manager: "", dueDate: "", memo: "" });
     } catch (error) {
-      alert("데이터 저장 실패! Firebase 데이터베이스 생성 및 규칙(Rules) 설정을 확인해주세요.");
-      console.error(error);
+      alert("데이터 저장 실패!");
     }
   };
 
-  // DB 데이터 삭제
   const handleDelete = async (id) => {
     if (confirm("정말 삭제하시겠습니까? 복구할 수 없습니다.")) {
       await deleteDoc(doc(db, "platforms", id));
     }
   };
 
-  // DB 실시간 수정
   const handleUpdateField = async (id, field, value) => {
     await updateDoc(doc(db, "platforms", id), { [field]: value });
   };
